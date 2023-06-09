@@ -72,9 +72,42 @@ app.put('/update/:id',async(req,res)=>{
     const filter={_id: new ObjectId(id)}
     const options = { upsert: true };
     const updateData=req.body
+    console.log(updateData);
     const updatedDoc ={
         $set: {
-            availableSeats:updateData.remaining
+            availableSeats:updateData.remaining,
+         },
+      }
+      const result = await ClassesCollection.updateOne(filter, updatedDoc, options);
+      res.send(result)
+})
+
+app.put('/approveClass/:id',async(req,res)=>{
+    const id = req.params.id
+    
+    const filter={_id: new ObjectId(id)}
+    const options = { upsert: true };
+    const updateData=req.body
+    console.log(updateData);
+    const updatedDoc ={
+        $set: {
+            status:updateData.approve
+         },
+      }
+      const result = await ClassesCollection.updateOne(filter, updatedDoc, options);
+      res.send(result)
+})
+
+app.put('/denyClass/:id',async(req,res)=>{
+    const id = req.params.id
+    
+    const filter={_id: new ObjectId(id)}
+    const options = { upsert: true };
+    const updateData=req.body
+    console.log(updateData);
+    const updatedDoc ={
+        $set: {
+            status:updateData.deny
          },
       }
       const result = await ClassesCollection.updateOne(filter, updatedDoc, options);
@@ -176,9 +209,7 @@ app.patch('/makeAdmin/:id',async(req,res)=>{
 })
 
 
-
-
- app.get('/admin',verifyJwt,async(req,res)=>{
+app.get('/admin',verifyJwt,async(req,res)=>{
     const email=req.query.email
     if(req.decoded?.email !== email){
         return res.send({ admin: false });
@@ -190,6 +221,31 @@ app.patch('/makeAdmin/:id',async(req,res)=>{
  })
 // JWT TOKEN
 
+
+
+// make instructor 
+app.patch('/makeInstructor/:id',async(req,res)=>{
+    const id=req.params.id
+    const filter={_id: new ObjectId(id)}
+    const options = { upsert: true };
+    const user=req.body
+    const updatedDoc ={
+        $set: {
+            role: user.role
+         },
+      }
+      const result = await usersCollection.updateOne(filter, updatedDoc, options);
+      res.send(result)
+})
+
+// add class by instructor
+
+app.post('/classes',async(req,res)=>{
+    const newClass = req.body
+    const result=await ClassesCollection.insertOne(newClass)
+    res.send(result)
+})
+
 app.post('/jwt',async(req,res)=>{
     const body =req.body
     const token=jwt.sign(body,process.env.JWT_TOKEN,{
@@ -198,6 +254,50 @@ app.post('/jwt',async(req,res)=>{
       res.send({token})
 })
 
+
+app.get('/instructor',verifyJwt,async(req,res)=>{
+    const email=req.query.email
+    if(req.decoded?.email !== email){
+        return res.send({ admin: false });
+    }
+    const query={email:email}
+    const user =await usersCollection.findOne(query)
+    const result={instructor: user?.role==='instructor'}
+    res.send(result)
+ })
+
+// get instructor added class
+
+app.get('/instructorClass',verifyJwt,async(req,res)=>{
+    const email =req.query?.email
+   
+    if (!email) {
+      return res
+        .status(403)
+        .send({ error: "No classes found" });
+    }
+    if (req.decoded?.email !== email) {
+      return res.status(403).send({ error: "Unauthorized access!" });
+    }
+    const filter ={email:email}
+    const result =await ClassesCollection.find(filter).toArray()
+    res.send(result)
+})
+
+
+
+
+//  get user role 
+app.get('/user',verifyJwt,async(req,res)=>{
+    const email=req.query.email
+    if(req.decoded?.email !== email){
+        return res.send({ admin: false });
+    }
+    const query={email:email}
+    const user =await usersCollection.findOne(query)
+    const result={user: user?.role==='user'}
+    res.send(result)
+ })
 
 
 
