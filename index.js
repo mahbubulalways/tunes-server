@@ -81,6 +81,23 @@ app.put('/update/:id',async(req,res)=>{
       res.send(result)
 })
 
+// btn disable 
+app.patch('/setDisable/:id',async(req,res)=>{
+    const id = req.params.id
+    
+    const filter={_id: new ObjectId(id)}
+    const options = { upsert: true };
+    const updateData=req.body
+    console.log({updateData});
+    const updatedDoc ={
+        $set: {
+            disable:updateData.btnDisable
+         },
+      }
+      const result = await ClassesCollection.updateOne(filter, updatedDoc, options);
+      res.send(result)
+})
+
 app.get('/myClass',verifyJwt,async(req,res)=>{
       const email =req.query?.email
      
@@ -97,7 +114,80 @@ app.get('/myClass',verifyJwt,async(req,res)=>{
       res.send(result)
 })
 
+app.delete('/myClass/:id',async(req,res)=>{
+    const id =req.params.id
+    const query = { _id: new ObjectId(id) };
+        const result=await SelectedCollection.deleteOne(query)
+        res.send(result)
+})
 
+
+
+//users collection
+app.post('/users',async(req,res)=>{
+    const user=req.body
+    const query={email:user.email}
+    const existUser=await usersCollection.findOne(query)
+    if(existUser){
+        return res.send({message:'User already exist'})
+    }
+    const result=await usersCollection.insertOne(user)
+    res.send(result)
+})
+
+// verify admin
+const verifyAdmin=async(req,res,next)=>{
+    const email =req.decoded.email
+    const query={email:email}
+    const user =await usersCollection.findOne(query)
+    if(user?.role !== 'admin'){
+       return res.status(403).send({error:true,message:'Unauthorized access!'})
+    }
+    next()
+}
+
+
+app.get('/allUsers',verifyJwt,verifyAdmin,async(req,res)=>{
+    const result=await usersCollection.find().toArray()
+    res.send(result)
+})
+
+app.delete('/user/:id',async(req,res)=>{
+    const id=req.params.id
+    const query = { _id: new ObjectId(id) };
+    const result=await usersCollection.deleteOne(query)
+    res.send(result)
+})
+
+//make admin
+
+app.patch('/makeAdmin/:id',async(req,res)=>{
+    const id=req.params.id
+    const filter={_id: new ObjectId(id)}
+    const options = { upsert: true };
+    const user=req.body
+    const updatedDoc ={
+        $set: {
+            role: user.role
+         },
+      }
+      const result = await usersCollection.updateOne(filter, updatedDoc, options);
+      res.send(result)
+})
+
+
+
+
+ app.get('/admin',verifyJwt,async(req,res)=>{
+    const email=req.query.email
+    if(req.decoded?.email !== email){
+        return res.send({ admin: false });
+    }
+    const query={email:email}
+    const user =await usersCollection.findOne(query)
+    const result={admin: user?.role==='admin'}
+    res.send(result)
+ })
 // JWT TOKEN
 
 app.post('/jwt',async(req,res)=>{
