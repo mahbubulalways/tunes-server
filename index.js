@@ -1,8 +1,8 @@
+require('dotenv').config()
 const express =require('express')
 const cors=require('cors')
-const stripe=require('stripe')(process.env.PAYMENT_SECRET_KEY)
+const stripe=require("stripe")(process.env.PAYMENT_SECRET_KEY)
 const app=express()
-require('dotenv').config()
 app.use(cors())
 app.use(express.json())
 const jwt = require('jsonwebtoken');
@@ -55,8 +55,9 @@ async function run() {
     const ClassesCollection = client.db("tunes").collection("classes");
     const SelectedCollection = client.db("tunes").collection("selected");
     const usersCollection = client.db("tunes").collection("users");
+    const paymentsCollection = client.db("tunes").collection("payments");
 
-app.get('/classes',async(req,res)=>{
+    app.get('/classes',async(req,res)=>{
     const result =await ClassesCollection.find().toArray()
     res.send(result)
 })
@@ -75,16 +76,17 @@ app.get('/singleClass/:id',async(req,res)=>{
 })
 
 
-app.put('/update/:id',async(req,res)=>{
-    const id = req.params.id
-    
-    const filter={_id: new ObjectId(id)}
+app.put('/update/:className',async(req,res)=>{
+    const className= req.params.className
+    console.log(className);
+    const filter={className:className}
     const options = { upsert: true };
     const updateData=req.body
-    console.log(updateData);
+   
     const updatedDoc ={
         $set: {
-            availableSeats:updateData.remaining,
+            availableSeats:updateData.remainingSeat,
+            enroll:updateData.enroll
          },
       }
       const result = await ClassesCollection.updateOne(filter, updatedDoc, options);
@@ -97,7 +99,7 @@ app.put('/approveClass/:id',async(req,res)=>{
     const filter={_id: new ObjectId(id)}
     const options = { upsert: true };
     const updateData=req.body
-    console.log(updateData);
+   
     const updatedDoc ={
         $set: {
             status:updateData.approve
@@ -123,6 +125,22 @@ app.put('/denyClass/:id',async(req,res)=>{
       res.send(result)
 })
 
+app.patch('/feedback/:id',async(req,res)=>{
+    const id = req.params.id
+    
+    const filter={_id: new ObjectId(id)}
+    const options = { upsert: true };
+    const updateData=req.body
+   
+    const updatedDoc ={
+        $set: {
+            feedback:updateData.feedback
+         },
+      }
+      const result = await ClassesCollection.updateOne(filter, updatedDoc, options);
+      res.send(result)
+})
+
 // btn disable 
 app.patch('/setDisable/:id',async(req,res)=>{
     const id = req.params.id
@@ -130,7 +148,7 @@ app.patch('/setDisable/:id',async(req,res)=>{
     const filter={_id: new ObjectId(id)}
     const options = { upsert: true };
     const updateData=req.body
-    console.log({updateData});
+    
     const updatedDoc ={
         $set: {
             disable:updateData.btnDisable
@@ -312,10 +330,14 @@ app.get('/user',verifyJwt,async(req,res)=>{
     res.send(result)
  })
 
+
 //  create payment intent 
-app.post('/create-payment-intent',async(req,res)=>{
-    const body =req.body
-    const price =body.price
+app.post('/create-payment-intent',verifyJwt,async(req,res)=>{
+    const {price} =req.body
+    
+    if(!price){
+        return
+    }
     const amount =price * 100
     const paymentIntent =await stripe.paymentIntents.create({
         amount:amount,
@@ -324,6 +346,33 @@ app.post('/create-payment-intent',async(req,res)=>{
     })
     res.send({ clientSecret: paymentIntent.client_secret})
 })
+
+
+// payment collection api
+
+app.post ('/payment',async(req,res)=>{
+    const paymentInfo =req.body
+    const result=await paymentsCollection.insertOne(paymentInfo)
+    res.send(result)
+})
+// get enroll class 
+
+app.get('/enrollClass',verifyJwt,async(req,res)=>{
+    const email =req.query.email
+    
+    console.log(email);
+    if(!email){
+        return
+    }
+    const query={email:email}
+    const result=await paymentsCollection.find(query).toArray()
+    res.send(result)
+})
+
+
+
+
+
 
 
     // Send a ping to confirm a successful connection
