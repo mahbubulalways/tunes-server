@@ -312,7 +312,18 @@ app.get('/user',verifyJwt,async(req,res)=>{
     res.send(result)
  })
 
-
+//  create payment intent 
+app.post('/create-payment-intent',async(req,res)=>{
+    const body =req.body
+    const price =body.price
+    const amount =price * 100
+    const paymentIntent =await stripe.paymentIntents.create({
+        amount:amount,
+        currency:'usd',
+        payment_method_types:['card']
+    })
+    res.send({ clientSecret: paymentIntent.client_secret})
+})
 
 
     // Send a ping to confirm a successful connection
@@ -324,17 +335,6 @@ app.get('/user',verifyJwt,async(req,res)=>{
   }
 }
 run().catch(console.dir);
-
-
-
-
-
-
-
-
-
-
-
 
 
 app.get('/',(req,res)=>{
