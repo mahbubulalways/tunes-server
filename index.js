@@ -1,5 +1,6 @@
 const express =require('express')
 const cors=require('cors')
+const stripe=require('stripe')(process.env.PAYMENT_SECRET_KEY)
 const app=express()
 require('dotenv').config()
 app.use(cors())
@@ -25,14 +26,14 @@ const client = new MongoClient(uri, {
 // verify jwt 
 
 const verifyJwt=(req,res,next)=>{
-    const authorization =req.headers.authorization
+    const authorization =req.headers?.authorization
     if(!authorization){
         res.status(401).send({error:true,message:'Unauthorized access!'})
     }
-    const token=authorization.split(' ')[1]
+    const token=authorization?.split(' ')[1]
     jwt.verify(token, process.env.JWT_TOKEN, (err, decoded)=> {
         if(err){
-            res.status(401).send({error:true,message:'Unauthorized access!'})
+           return res.status(401).send({error:true,message:'Unauthorized access!'})
         }
         req.decoded = decoded;
         next();
@@ -65,6 +66,14 @@ app.post ('/userClass',async(req,res)=>{
     const result=await SelectedCollection.insertOne(selected)
     res.send(result)
 })
+
+app.get('/singleClass/:id',async(req,res)=>{
+    const id =req.params.id
+    const query ={_id : new ObjectId(id)}
+    const result = await SelectedCollection.findOne(query)
+    res.send(result)
+})
+
 
 app.put('/update/:id',async(req,res)=>{
     const id = req.params.id
@@ -208,9 +217,12 @@ app.patch('/makeAdmin/:id',async(req,res)=>{
       res.send(result)
 })
 
-
+// get admin role 
 app.get('/admin',verifyJwt,async(req,res)=>{
     const email=req.query.email
+    if(!email){
+        return res.send({ admin: false });
+    }
     if(req.decoded?.email !== email){
         return res.send({ admin: false });
     }
@@ -254,11 +266,14 @@ app.post('/jwt',async(req,res)=>{
       res.send({token})
 })
 
-
+// get instructor role
 app.get('/instructor',verifyJwt,async(req,res)=>{
     const email=req.query.email
+    if(!email){
+        return res.send({ instructor: false });
+    }
     if(req.decoded?.email !== email){
-        return res.send({ admin: false });
+        return res.send({ instructor: false });
     }
     const query={email:email}
     const user =await usersCollection.findOne(query)
@@ -283,8 +298,6 @@ app.get('/instructorClass',verifyJwt,async(req,res)=>{
     const result =await ClassesCollection.find(filter).toArray()
     res.send(result)
 })
-
-
 
 
 //  get user role 
