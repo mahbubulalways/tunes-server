@@ -27,7 +27,6 @@ const client = new MongoClient(uri, {
 
 const verifyJwt=(req,res,next)=>{
     const authorization =req.headers?.authorization
-  
     if(!authorization){
         res.status(401).send({error:true,message:'Unauthorized access!'})
     }
@@ -79,7 +78,6 @@ app.get('/popularClass',async(req,res)=>{
 
 app.post ('/userClass',async(req,res)=>{
     const selected =req.body
-    console.log(selected);
     const result=await SelectedCollection.insertOne(selected)
     res.send(result)
 })
