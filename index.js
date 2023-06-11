@@ -121,7 +121,6 @@ app.put('/approveClass/:id',async(req,res)=>{
 
 app.put('/denyClass/:id',async(req,res)=>{
     const id = req.params.id
-    console.log(id);
     const filter={_id: new ObjectId(id)}
     const options = { upsert: true };
     const updateData=req.body
@@ -136,7 +135,6 @@ app.put('/denyClass/:id',async(req,res)=>{
 
 app.patch('/feedback/:id',async(req,res)=>{
     const id = req.params.id
-    console.log(id);
     const filter={_id: new ObjectId(id)}
     const options = { upsert: true };
     const updateData=req.body
@@ -153,7 +151,6 @@ app.patch('/feedback/:id',async(req,res)=>{
 // btn disable 
 app.patch('/setDisable/:id',async(req,res)=>{
     const id = req.params.id
-    console.log(id);
     const filter={_id: new ObjectId(id)}
     const options = { upsert: true };
     const updateData=req.body
@@ -169,7 +166,6 @@ app.patch('/setDisable/:id',async(req,res)=>{
 
 app.get('/myClass',verifyJwt,async(req,res)=>{
       const email =req.query?.email
-     console.log(email);
       if (!email) {
         return res
           .status(403)
