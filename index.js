@@ -87,7 +87,6 @@ app.get('/singleClass/:id',async(req,res)=>{
     res.send(result)
 })
 
-
 app.put('/update/:className',async(req,res)=>{
     const className= req.params.className
     const filter={className:className}
@@ -106,7 +105,7 @@ app.put('/update/:className',async(req,res)=>{
 
 app.put('/approveClass/:id',async(req,res)=>{
     const id = req.params.id
-    console.log(id);
+ 
     const filter={_id: new ObjectId(id)}
     const options = { upsert: true };
     const updateData=req.body
