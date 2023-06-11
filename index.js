@@ -66,11 +66,9 @@ async function run() {
     res.send(result)
 })
 
-
-
+// popular class api
 
 app.get('/popularClass',async(req,res)=>{
-   
     const result =await ClassesCollection.find().sort({ enroll: -1 }).limit(6).toArray()
     res.send(result)
 })
@@ -93,7 +91,6 @@ app.get('/singleClass/:id',async(req,res)=>{
 
 app.put('/update/:className',async(req,res)=>{
     const className= req.params.className
-    console.log(className);
     const filter={className:className}
     const options = { upsert: true };
     const updateData=req.body
