@@ -27,6 +27,7 @@ const client = new MongoClient(uri, {
 
 const verifyJwt=(req,res,next)=>{
     const authorization =req.headers?.authorization
+    console.log(authorization);
     if(!authorization){
         res.status(401).send({error:true,message:'Unauthorized access!'})
     }
@@ -78,12 +79,14 @@ app.get('/popularClass',async(req,res)=>{
 
 app.post ('/userClass',async(req,res)=>{
     const selected =req.body
+    console.log(selected);
     const result=await SelectedCollection.insertOne(selected)
     res.send(result)
 })
 
 app.get('/singleClass/:id',async(req,res)=>{
     const id =req.params.id
+    console.log(id);
     const query ={_id : new ObjectId(id)}
     const result = await SelectedCollection.findOne(query)
     res.send(result)
@@ -92,6 +95,7 @@ app.get('/singleClass/:id',async(req,res)=>{
 
 app.put('/update/:className',async(req,res)=>{
     const className= req.params.className
+    console.log(className);
     const filter={className:className}
     const options = { upsert: true };
     const updateData=req.body
@@ -108,7 +112,7 @@ app.put('/update/:className',async(req,res)=>{
 
 app.put('/approveClass/:id',async(req,res)=>{
     const id = req.params.id
-    
+    console.log(id);
     const filter={_id: new ObjectId(id)}
     const options = { upsert: true };
     const updateData=req.body
@@ -124,7 +128,7 @@ app.put('/approveClass/:id',async(req,res)=>{
 
 app.put('/denyClass/:id',async(req,res)=>{
     const id = req.params.id
-    
+    console.log(id);
     const filter={_id: new ObjectId(id)}
     const options = { upsert: true };
     const updateData=req.body
@@ -139,7 +143,7 @@ app.put('/denyClass/:id',async(req,res)=>{
 
 app.patch('/feedback/:id',async(req,res)=>{
     const id = req.params.id
-    
+    console.log(id);
     const filter={_id: new ObjectId(id)}
     const options = { upsert: true };
     const updateData=req.body
@@ -156,11 +160,11 @@ app.patch('/feedback/:id',async(req,res)=>{
 // btn disable 
 app.patch('/setDisable/:id',async(req,res)=>{
     const id = req.params.id
-    
+    console.log(id);
     const filter={_id: new ObjectId(id)}
     const options = { upsert: true };
     const updateData=req.body
-    
+    console.log(updateData);
     const updatedDoc ={
         $set: {
             disable:updateData.btnDisable
@@ -172,7 +176,7 @@ app.patch('/setDisable/:id',async(req,res)=>{
 
 app.get('/myClass',verifyJwt,async(req,res)=>{
       const email =req.query?.email
-     
+     console.log(email);
       if (!email) {
         return res
           .status(403)
