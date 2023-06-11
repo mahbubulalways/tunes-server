@@ -41,18 +41,13 @@ const verifyJwt=(req,res,next)=>{
 }
 
 
-
-
-
-
-
-
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
     const ClassesCollection = client.db("tunes").collection("classes");
+    const instructorCollection = client.db("tunes").collection("instructors");
     const SelectedCollection = client.db("tunes").collection("selected");
     const usersCollection = client.db("tunes").collection("users");
     const paymentsCollection = client.db("tunes").collection("payments");
@@ -61,6 +56,25 @@ async function run() {
     const result =await ClassesCollection.find().toArray()
     res.send(result)
 })
+    app.get('/instructors',async(req,res)=>{
+    const result =await instructorCollection.find().toArray()
+    res.send(result)
+})
+    app.post('/addedInstructor',verifyJwt,async(req,res)=>{
+        const instructor=req.body
+    const result =await instructorCollection.insertOne(instructor)
+    res.send(result)
+})
+
+
+
+
+app.get('/popularClass',async(req,res)=>{
+   
+    const result =await ClassesCollection.find().sort({ enroll: -1 }).limit(6).toArray()
+    res.send(result)
+})
+
 
 app.post ('/userClass',async(req,res)=>{
     const selected =req.body
@@ -78,7 +92,6 @@ app.get('/singleClass/:id',async(req,res)=>{
 
 app.put('/update/:className',async(req,res)=>{
     const className= req.params.className
-    console.log(className);
     const filter={className:className}
     const options = { upsert: true };
     const updateData=req.body
@@ -115,7 +128,6 @@ app.put('/denyClass/:id',async(req,res)=>{
     const filter={_id: new ObjectId(id)}
     const options = { upsert: true };
     const updateData=req.body
-    console.log(updateData);
     const updatedDoc ={
         $set: {
             status:updateData.deny
@@ -249,9 +261,6 @@ app.get('/admin',verifyJwt,async(req,res)=>{
     const result={admin: user?.role==='admin'}
     res.send(result)
  })
-// JWT TOKEN
-
-
 
 // make instructor 
 app.patch('/makeInstructor/:id',async(req,res)=>{
@@ -275,6 +284,8 @@ app.post('/classes',async(req,res)=>{
     const result=await ClassesCollection.insertOne(newClass)
     res.send(result)
 })
+
+// JWT TOKEN
 
 app.post('/jwt',async(req,res)=>{
     const body =req.body
@@ -359,13 +370,11 @@ app.post ('/payment',async(req,res)=>{
 
 app.get('/enrollClass',verifyJwt,async(req,res)=>{
     const email =req.query.email
-    
-    console.log(email);
     if(!email){
         return
     }
     const query={email:email}
-    const result=await paymentsCollection.find(query).toArray()
+    const result=await paymentsCollection.find(query).sort({date: -1}).toArray()
     res.send(result)
 })
 
@@ -387,7 +396,7 @@ run().catch(console.dir);
 
 
 app.get('/',(req,res)=>{
-    res.send('Assignment 12 running')
+    res.send('Assignment 12 server site  ')
 })
 
 app.listen(port,()=>{
